@@ -1,9 +1,40 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    // Shape check shared by task creates and updates
+    function isValidTask(data) {
+      return data.keys().hasOnly(['taskId', 'title', 'description', 'dueDate', 'hasTime', 'priority', 'course', 'status', 'createdAt', 'updatedAt'])
+        && data.keys().hasAll(['taskId', 'title', 'description', 'dueDate', 'hasTime', 'priority', 'course', 'status', 'createdAt', 'updatedAt'])
+        && data.title is string && data.title.size() > 0 && data.title.size() <= 200
+        && data.description is string && data.description.size() <= 2000
+        && data.course is string && data.course.size() <= 100
+        && data.dueDate is timestamp
+        && data.hasTime is bool
+        && data.priority in ['Low', 'Medium', 'High']
+        && data.status in ['Not Started', 'In Progress', 'Completed']
+        && data.updatedAt == request.time;
+    }
+
     // Each user can only read/write their own profile document
     match /users/{uid} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
+      allow read, write: if isOwner(uid);
+
+      // Tasks live under the owner's profile, so the path alone proves ownership
+      match /tasks/{taskId} {
+        allow read, delete: if isOwner(uid);
+        allow create: if isOwner(uid)
+          && isValidTask(request.resource.data)
+          && request.resource.data.taskId == taskId
+          && request.resource.data.createdAt == request.time;
+        allow update: if isOwner(uid)
+          && isValidTask(request.resource.data)
+          && request.resource.data.taskId == resource.data.taskId
+          && request.resource.data.createdAt == resource.data.createdAt;
+      }
     }
   }
 }
