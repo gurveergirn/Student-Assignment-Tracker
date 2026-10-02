@@ -4,20 +4,41 @@ import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
 import { Button, GlassCard, PriorityBadge, Spinner, StatusBadge } from "../components/ui";
-import { PlusIcon } from "../components/icons";
+import { EyeIcon, PlusIcon } from "../components/icons";
 import TaskHoverActions from "../components/TaskHoverActions";
-import { HOVER_BLUR } from "../lib/glass";
+import CourseProgressModal from "../components/CourseProgressModal";
+import { GLASS_ACCENT, HOVER_BLUR } from "../lib/glass";
 import { PRIORITY_DOT, isOverdue } from "../lib/taskMeta";
 import { addDays, formatTime, formatWeekday, relativeDay, startOfDay } from "../lib/dates";
 
-function StatCard({ label, value, accent }) {
+// Frosted "View" pill that fades in over a group/task card on hover or keyboard focus
+function ViewOverlay({ label = "View" }) {
   return (
-    <GlassCard className="p-5">
-      <div className="flex items-center gap-2">
-        <span className={`h-2 w-2 rounded-full ${accent}`} />
-        <p className="text-sm text-gray-500">{label}</p>
+    <div className="pointer-events-none absolute inset-0 flex items-center justify-center opacity-0 transition-all duration-300 group-hover/task:opacity-100 group-focus-visible/task:opacity-100">
+      <span className={`flex scale-90 items-center gap-1.5 rounded-full px-4 py-2 text-sm font-medium transition-all duration-300 group-hover/task:scale-100 group-focus-visible/task:scale-100 ${GLASS_ACCENT}`}>
+        <EyeIcon /> {label}
+      </span>
+    </div>
+  );
+}
+
+// Links to My Tasks with that status filter; blurs and shows "View" on hover/focus
+function StatCard({ label, value, accent, to }) {
+  return (
+    <GlassCard
+      as={Link}
+      to={to}
+      aria-label={`View ${label.toLowerCase()}`}
+      className="group/task relative block p-5 transition-all duration-300 hover:shadow-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900/25"
+    >
+      <div className={HOVER_BLUR}>
+        <div className="flex items-center gap-2">
+          <span className={`h-2 w-2 rounded-full ${accent}`} />
+          <p className="text-sm text-gray-500">{label}</p>
+        </div>
+        <p className="mt-2 text-3xl font-semibold tracking-tight">{value}</p>
       </div>
-      <p className="mt-2 text-3xl font-semibold tracking-tight">{value}</p>
+      <ViewOverlay />
     </GlassCard>
   );
 }
@@ -53,6 +74,7 @@ export default function Dashboard() {
   const { user } = useAuth();
   const { tasks, loading, openNewTask, openEditTask, requestDelete, changeStatus } = useOutletContext();
   const [profile, setProfile] = useState(null);
+  const [showCourses, setShowCourses] = useState(false);
 
   useEffect(() => {
     // Live listener so the name shows up as soon as the profile doc is written on signup
@@ -108,42 +130,57 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard label="Total tasks" value={stats.total} accent="bg-zinc-500" />
-        <StatCard label="Completed" value={stats.completed} accent="bg-green-500" />
-        <StatCard label="In progress" value={stats.inProgress} accent="bg-zinc-400" />
-        <StatCard label="Not started" value={stats.notStarted} accent="bg-zinc-300" />
+        <StatCard label="Total tasks" value={stats.total} accent="bg-zinc-500" to="/tasks" />
+        <StatCard label="Completed" value={stats.completed} accent="bg-green-500" to="/tasks?status=Completed" />
+        <StatCard label="In progress" value={stats.inProgress} accent="bg-zinc-400" to="/tasks?status=In+Progress" />
+        <StatCard label="Not started" value={stats.notStarted} accent="bg-zinc-300" to="/tasks?status=Not+Started" />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-5">
-        <GlassCard className="p-6 lg:col-span-2">
-          <h2 className="font-semibold">Progress</h2>
-          <div className="mt-5 flex flex-col items-center gap-6 sm:flex-row lg:flex-col xl:flex-row">
-            <ProgressRing percent={stats.percent} />
-            <div className="w-full space-y-4">
-              <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-gray-900/5">
-                {stats.total > 0 &&
-                  segments.map((s) => (
-                    <div key={s.label} className={`${s.color} transition-all duration-700`} style={{ width: `${(s.value / stats.total) * 100}%` }} />
+        <GlassCard
+          role="button"
+          tabIndex={0}
+          onClick={() => setShowCourses(true)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              setShowCourses(true);
+            }
+          }}
+          aria-label="View progress by course"
+          className="group/task relative cursor-pointer p-6 transition-all duration-300 hover:shadow-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900/25 lg:col-span-2"
+        >
+          <div className={HOVER_BLUR}>
+            <h2 className="font-semibold">Progress</h2>
+            <div className="mt-5 flex flex-col items-center gap-6 sm:flex-row lg:flex-col xl:flex-row">
+              <ProgressRing percent={stats.percent} />
+              <div className="w-full space-y-4">
+                <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-gray-900/5">
+                  {stats.total > 0 &&
+                    segments.map((s) => (
+                      <div key={s.label} className={`${s.color} transition-all duration-700`} style={{ width: `${(s.value / stats.total) * 100}%` }} />
+                    ))}
+                </div>
+                <ul className="space-y-2 text-sm">
+                  {segments.map((s) => (
+                    <li key={s.label} className="flex items-center justify-between">
+                      <span className="flex items-center gap-2 text-gray-500">
+                        <span className={`h-2 w-2 rounded-full ${s.color}`} />
+                        {s.label}
+                      </span>
+                      <span className="font-medium">{s.value}</span>
+                    </li>
                   ))}
+                </ul>
+                {stats.overdue > 0 && (
+                  <p className="rounded-xl bg-red-500/10 px-3 py-2 text-sm text-red-700 ring-1 ring-red-500/20">
+                    {stats.overdue} overdue {stats.overdue === 1 ? "task" : "tasks"}
+                  </p>
+                )}
               </div>
-              <ul className="space-y-2 text-sm">
-                {segments.map((s) => (
-                  <li key={s.label} className="flex items-center justify-between">
-                    <span className="flex items-center gap-2 text-gray-500">
-                      <span className={`h-2 w-2 rounded-full ${s.color}`} />
-                      {s.label}
-                    </span>
-                    <span className="font-medium">{s.value}</span>
-                  </li>
-                ))}
-              </ul>
-              {stats.overdue > 0 && (
-                <p className="rounded-xl bg-red-500/10 px-3 py-2 text-sm text-red-700 ring-1 ring-red-500/20">
-                  {stats.overdue} overdue {stats.overdue === 1 ? "task" : "tasks"}
-                </p>
-              )}
             </div>
           </div>
+          <ViewOverlay label="View by Course" />
         </GlassCard>
 
         <GlassCard className="p-6 lg:col-span-3">
@@ -192,6 +229,7 @@ export default function Dashboard() {
           )}
         </GlassCard>
       </div>
+      {showCourses && <CourseProgressModal tasks={tasks} onClose={() => setShowCourses(false)} />}
     </div>
   );
 }

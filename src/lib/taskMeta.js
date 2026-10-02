@@ -25,3 +25,6 @@ export function isOverdue(task, now = new Date()) {
   const cutoff = task.hasTime ? now : new Date(now.getFullYear(), now.getMonth(), now.getDate());
   return task.dueDate < cutoff;
 }
+
+// Courses are free text, so "CPS 714" and "cps 714 " should count as the same course
+export const courseKey = (course = "") => course.trim().toLowerCase();

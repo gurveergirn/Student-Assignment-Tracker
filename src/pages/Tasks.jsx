@@ -1,9 +1,8 @@
-import { useState } from "react";
-import { useOutletContext } from "react-router-dom";
+import { useOutletContext, useSearchParams } from "react-router-dom";
 import { GLASS_CONTROL } from "../lib/glass";
 import { Button, GlassCard, IconButton, PriorityBadge, Spinner, StatusBadge } from "../components/ui";
 import { CheckIcon, PencilIcon, PlusIcon, TrashIcon } from "../components/icons";
-import { PRIORITY_DOT, STATUSES, isOverdue } from "../lib/taskMeta";
+import { PRIORITY_DOT, STATUSES, courseKey, isOverdue } from "../lib/taskMeta";
 import { formatDate, formatTime, relativeDay } from "../lib/dates";
 
 const FILTERS = ["All", ...STATUSES];
@@ -25,10 +24,22 @@ function DoneButton({ done, onClick }) {
 
 export default function Tasks() {
   const { tasks, loading, openNewTask, openEditTask, requestDelete, changeStatus } = useOutletContext();
-  const [filter, setFilter] = useState("All");
+  // Filters live in the URL (?status=Completed&course=CPS714) so the dashboard can link straight to them.
+  // course="" means "tasks with no course".
+  const [searchParams, setSearchParams] = useSearchParams();
+  const filter = STATUSES.includes(searchParams.get("status")) ? searchParams.get("status") : "All";
+  const course = searchParams.has("course") ? searchParams.get("course") : null;
 
-  const visible = filter === "All" ? tasks : tasks.filter((t) => t.status === filter);
-  const countFor = (f) => (f === "All" ? tasks.length : tasks.filter((t) => t.status === f).length);
+  const updateParams = (changes) => {
+    const next = new URLSearchParams(searchParams);
+    for (const [k, v] of Object.entries(changes)) v === null ? next.delete(k) : next.set(k, v);
+    setSearchParams(next, { replace: true });
+  };
+  const setFilter = (f) => updateParams({ status: f === "All" ? null : f });
+
+  const inCourse = course === null ? tasks : tasks.filter((t) => courseKey(t.course) === courseKey(course));
+  const visible = filter === "All" ? inCourse : inCourse.filter((t) => t.status === filter);
+  const countFor = (f) => (f === "All" ? inCourse.length : inCourse.filter((t) => t.status === f).length);
 
   return (
     <div className="space-y-6">
@@ -42,20 +53,36 @@ export default function Tasks() {
         </Button>
       </div>
 
-      <div className={`flex gap-1 overflow-x-auto rounded-2xl p-1 sm:inline-flex ${GLASS_CONTROL}`}>
-        {FILTERS.map((f) => (
-          <button
-            key={f}
-            type="button"
-            onClick={() => setFilter(f)}
-            aria-pressed={filter === f}
-            className={`whitespace-nowrap rounded-xl px-3 py-1.5 text-sm font-medium transition-all duration-200 ${
-              filter === f ? "bg-white text-gray-900 shadow-sm shadow-black/10" : "text-gray-500 hover:text-gray-900"
-            }`}
-          >
-            {f} <span className="text-gray-400">{countFor(f)}</span>
-          </button>
-        ))}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className={`flex gap-1 overflow-x-auto rounded-2xl p-1 sm:inline-flex ${GLASS_CONTROL}`}>
+          {FILTERS.map((f) => (
+            <button
+              key={f}
+              type="button"
+              onClick={() => setFilter(f)}
+              aria-pressed={filter === f}
+              className={`whitespace-nowrap rounded-xl px-3 py-1.5 text-sm font-medium transition-all duration-200 ${
+                filter === f ? "bg-white text-gray-900 shadow-sm shadow-black/10" : "text-gray-500 hover:text-gray-900"
+              }`}
+            >
+              {f} <span className="text-gray-400">{countFor(f)}</span>
+            </button>
+          ))}
+        </div>
+        {course !== null && (
+          <span className={`inline-flex items-center gap-1 rounded-full py-1 pr-1 pl-3 text-sm ${GLASS_CONTROL}`}>
+            <span className="text-gray-500">Course:</span>
+            <span className="max-w-48 truncate font-medium">{course || "No course"}</span>
+            <button
+              type="button"
+              onClick={() => updateParams({ course: null })}
+              aria-label="Clear course filter"
+              className="flex h-6 w-6 items-center justify-center rounded-full text-gray-500 transition-colors hover:bg-white hover:text-gray-900"
+            >
+              ×
+            </button>
+          </span>
+        )}
       </div>
 
       {loading ? (
@@ -64,7 +91,7 @@ export default function Tasks() {
         </div>
       ) : visible.length === 0 ? (
         <GlassCard className="p-12 text-center">
-          <p className="font-medium">{tasks.length === 0 ? "No tasks yet" : `No ${filter.toLowerCase()} tasks`}</p>
+          <p className="font-medium">{tasks.length === 0 ? "No tasks yet" : `No ${filter === "All" ? "" : `${filter.toLowerCase()} `}tasks${course !== null ? ` in ${course || "No course"}` : ""}`}</p>
           <p className="mt-1 text-sm text-gray-500">
             {tasks.length === 0 ? "Add your first assignment to start tracking it." : "Try a different filter."}
           </p>
