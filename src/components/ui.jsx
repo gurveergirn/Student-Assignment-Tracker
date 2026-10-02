@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { PRIORITY_BADGE, PRIORITY_DOT, STATUS_BADGE } from "../lib/taskMeta";
-import { ACCENT_SOLID, GLASS_CONTROL, GLASS_PANEL } from "../lib/glass";
+import { ACCENT_BUTTON, GLASS_CONTROL, GLASS_PANEL } from "../lib/glass";
 
 // Frosted glass panel used for cards, panels and modals
 export function GlassCard({ as: Tag = "div", className = "", children, ...props }) {
@@ -15,7 +15,7 @@ export function GlassCard({ as: Tag = "div", className = "", children, ...props 
 }
 
 const BUTTON_VARIANTS = {
-  primary: ACCENT_SOLID,
+  primary: ACCENT_BUTTON,
   secondary: `${GLASS_CONTROL} text-gray-800 hover:bg-white/80`,
   danger: "bg-red-500 text-white shadow-md shadow-red-500/20 hover:bg-red-600 active:bg-red-700",
   ghost: "text-gray-600 hover:bg-white/70 hover:text-gray-900",
@@ -72,7 +72,7 @@ export function StatusBadge({ status }) {
 }
 
 export function Spinner({ className = "h-8 w-8" }) {
-  return <div className={`animate-spin rounded-full border-4 border-zinc-200 border-t-zinc-800 ${className}`} />;
+  return <div className={`animate-spin rounded-full border-4 border-zinc-300/50 border-t-zinc-500 ${className}`} />;
 }
 
 // Centered frosted modal. Mount it to open, unmount to close.

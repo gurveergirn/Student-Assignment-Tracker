@@ -34,7 +34,7 @@ function ProgressRing({ percent }) {
           fill="none"
           strokeWidth="10"
           strokeLinecap="round"
-          className="stroke-zinc-800 transition-all duration-700"
+          className="stroke-zinc-500/80 transition-all duration-700"
           strokeDasharray={circumference}
           strokeDashoffset={circumference * (1 - percent / 100)}
         />
@@ -89,7 +89,7 @@ export default function Dashboard() {
 
   const segments = [
     { label: "Completed", value: stats.completed, color: "bg-green-500" },
-    { label: "In progress", value: stats.inProgress, color: "bg-zinc-800" },
+    { label: "In progress", value: stats.inProgress, color: "bg-zinc-500/70" },
     { label: "Not started", value: stats.notStarted, color: "bg-zinc-300" },
   ];
 
@@ -106,9 +106,9 @@ export default function Dashboard() {
       </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatCard label="Total tasks" value={stats.total} accent="bg-zinc-800" />
+        <StatCard label="Total tasks" value={stats.total} accent="bg-zinc-500" />
         <StatCard label="Completed" value={stats.completed} accent="bg-green-500" />
-        <StatCard label="In progress" value={stats.inProgress} accent="bg-zinc-500" />
+        <StatCard label="In progress" value={stats.inProgress} accent="bg-zinc-400" />
         <StatCard label="Not started" value={stats.notStarted} accent="bg-zinc-300" />
       </div>
 

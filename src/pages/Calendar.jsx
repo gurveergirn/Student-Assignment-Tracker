@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useOutletContext } from "react-router-dom";
-import { GLASS_CONTROL } from "../lib/glass";
+import { GLASS_ACCENT, GLASS_CONTROL } from "../lib/glass";
 import { Button, GlassCard, IconButton, PriorityBadge, Spinner } from "../components/ui";
 import { ChevronLeftIcon, ChevronRightIcon, PlusIcon } from "../components/icons";
 import { PRIORITY_DOT } from "../lib/taskMeta";
@@ -51,7 +51,7 @@ function DayNumber({ date, today, muted }) {
   return (
     <span
       className={`flex h-7 w-7 items-center justify-center rounded-full text-sm ${
-        isToday ? "bg-zinc-800 font-semibold text-white shadow-md shadow-black/20" : muted ? "text-gray-400" : "font-medium text-gray-700"
+        isToday ? `${GLASS_ACCENT} font-semibold` : muted ? "text-gray-400" : "font-medium text-gray-700"
       }`}
     >
       {date.getDate()}
@@ -128,7 +128,7 @@ function WeekView({ cursor, tasksByDay, today, onOpen, onAdd }) {
         const dayTasks = tasksByDay.get(toDateKey(day)) ?? [];
         const isToday = isSameDay(day, today);
         return (
-          <GlassCard key={toDateKey(day)} className={`group flex flex-col p-3 md:min-h-96 ${isToday ? "ring-2 ring-zinc-800/30" : ""}`}>
+          <GlassCard key={toDateKey(day)} className={`group flex flex-col p-3 md:min-h-96 ${isToday ? "ring-2 ring-zinc-500/30" : ""}`}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 md:flex-col md:items-start md:gap-1">
                 <span className="text-xs font-medium uppercase tracking-wide text-gray-500">{WEEKDAYS[day.getDay()]}</span>

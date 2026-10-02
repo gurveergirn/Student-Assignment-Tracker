@@ -4,7 +4,7 @@ import { useAuth } from "../context/AuthContext";
 function FullPageSpinner() {
   return (
     <div className="min-h-screen flex items-center justify-center">
-      <div className="h-8 w-8 animate-spin rounded-full border-4 border-zinc-200 border-t-zinc-800" />
+      <div className="h-8 w-8 animate-spin rounded-full border-4 border-zinc-300/50 border-t-zinc-500" />
     </div>
   );
 }

@@ -4,11 +4,12 @@ import { useAuth } from "../context/AuthContext";
 import { createTask, deleteTask, subscribeToTasks, updateTask } from "../services/taskService";
 import TaskFormModal from "./TaskFormModal";
 import ConfirmDialog from "./ConfirmDialog";
+import { GLASS_ACCENT } from "../lib/glass";
 import { CalendarIcon, HomeIcon, ListIcon, LogoIcon, LogoutIcon } from "./icons";
 
 const navPill = ({ isActive }) =>
   `inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200 ${
-    isActive ? "bg-zinc-800 text-white shadow-md shadow-black/15" : "text-gray-700 hover:bg-white/70"
+    isActive ? GLASS_ACCENT : "border border-transparent text-gray-700 hover:bg-white/70"
   }`;
 
 // Shell for every signed-in page: frosted nav, one live task subscription,
@@ -70,7 +71,7 @@ export default function AppLayout() {
       <header className="sticky top-0 z-40 border-b border-white/60 bg-white/45 shadow-[0_1px_0_rgba(0,0,0,0.04),0_8px_30px_-12px_rgba(0,0,0,0.1)] backdrop-blur-2xl backdrop-saturate-150">
         <nav className="mx-auto flex max-w-6xl items-center justify-between gap-3 px-4 py-3">
           <NavLink to="/dashboard" className="flex items-center gap-2.5 rounded-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-zinc-900/25">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-zinc-800 text-white shadow-md shadow-black/20">
+            <span className={`flex h-9 w-9 items-center justify-center rounded-xl ${GLASS_ACCENT}`}>
               <LogoIcon className="h-5 w-5" />
             </span>
             <span className="hidden font-semibold tracking-tight sm:inline">Student Task Tracker</span>
