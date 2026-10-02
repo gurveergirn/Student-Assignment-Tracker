@@ -52,7 +52,11 @@ export default function TaskFormModal({ task, defaultDate, onSave, onDelete, onC
       onClose();
     } catch (err) {
       console.error(err);
-      setError("Couldn't save the task. Please try again.");
+      setError(
+        err.code === "permission-denied"
+          ? "Firestore rejected the save (permission denied). Check that the latest firestore.rules are published."
+          : "Couldn't save the task. Please try again."
+      );
       setSaving(false);
     }
   };

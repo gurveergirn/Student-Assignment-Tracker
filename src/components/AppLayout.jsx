@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
-import { createTask, deleteTask, subscribeToTasks, updateTask } from "../services/taskService";
+import { createTask, deleteTask, setTaskStatus, subscribeToTasks, updateTask } from "../services/taskService";
 import TaskFormModal from "./TaskFormModal";
 import ConfirmDialog from "./ConfirmDialog";
 import { GLASS_ACCENT } from "../lib/glass";
@@ -46,6 +46,14 @@ export default function AppLayout() {
   const openNewTask = useCallback((defaultDate) => setForm({ defaultDate }), []);
   const openEditTask = useCallback((task) => setForm({ task }), []);
   const requestDelete = useCallback((task) => setPendingDelete(task), []);
+  const changeStatus = useCallback(
+    (task, status) =>
+      setTaskStatus(user.uid, task, status).catch((err) => {
+        console.error(err);
+        setError("Couldn't update the task. Please try again.");
+      }),
+    [user.uid]
+  );
   const closeForm = useCallback(() => setForm(null), []);
   const closeDelete = useCallback(() => setPendingDelete(null), []);
   const closeLogout = useCallback(() => setConfirmingLogout(false), []);
@@ -108,7 +116,7 @@ export default function AppLayout() {
         {error && (
           <p className="mb-6 rounded-xl bg-amber-400/15 px-4 py-3 text-sm text-amber-800 ring-1 ring-amber-500/25">{error}</p>
         )}
-        <Outlet context={{ tasks, loading, openNewTask, openEditTask, requestDelete }} />
+        <Outlet context={{ tasks, loading, openNewTask, openEditTask, requestDelete, changeStatus }} />
       </main>
 
       {form && (

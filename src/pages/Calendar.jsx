@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useOutletContext } from "react-router-dom";
-import { GLASS_ACCENT, GLASS_CONTROL } from "../lib/glass";
+import { GLASS_ACCENT, GLASS_CONTROL, HOVER_BLUR } from "../lib/glass";
+import TaskHoverActions from "../components/TaskHoverActions";
 import { Button, GlassCard, IconButton, PriorityBadge, Spinner } from "../components/ui";
 import { ChevronLeftIcon, ChevronRightIcon, PlusIcon } from "../components/icons";
 import { PRIORITY_DOT } from "../lib/taskMeta";
@@ -18,19 +19,22 @@ function monthDays(cursor) {
   return days;
 }
 
-function TaskChip({ task, onClick }) {
+// tabIndex lets a tap (touch has no hover) or Tab reveal the actions via focus-within
+function TaskChip({ task, actions }) {
   const done = task.status === "Completed";
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      title={`${task.hasTime ? `${formatTime(task.dueDate)} · ` : ""}${task.title}${task.course ? ` · ${task.course}` : ""}`}
-      className="flex w-full items-center gap-1.5 rounded-lg bg-white/60 px-1.5 py-1 text-left text-xs shadow-[inset_0_1px_0_0_rgba(255,255,255,0.9)] ring-1 ring-black/5 transition-all duration-200 hover:bg-white/90 hover:shadow-sm"
+    <div
+      tabIndex={0}
+      title={`${task.title}${task.hasTime ? ` · ${formatTime(task.dueDate)}` : ""}${task.course ? ` · ${task.course}` : ""}`}
+      className="group/task relative rounded-lg bg-white/60 text-xs shadow-[inset_0_1px_0_0_rgba(255,255,255,0.9)] ring-1 ring-black/5 transition-all duration-200 hover:bg-white/90 hover:shadow-sm focus:outline-none"
     >
-      <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${PRIORITY_DOT[task.priority]}`} />
-      {task.hasTime && <span className="shrink-0 font-medium tabular-nums text-gray-500">{formatTime(task.dueDate)}</span>}
-      <span className={`truncate ${done ? "text-gray-400 line-through" : "text-gray-800"}`}>{task.title}</span>
-    </button>
+      <div className={`flex min-h-7 items-center gap-1.5 px-1.5 py-1 ${HOVER_BLUR}`}>
+        <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${PRIORITY_DOT[task.priority]}`} />
+        <span className={`min-w-0 flex-1 truncate ${done ? "text-gray-400 line-through" : "text-gray-800"}`}>{task.title}</span>
+        {task.hasTime && <span className="shrink-0 font-medium tabular-nums text-gray-500">{formatTime(task.dueDate)}</span>}
+      </div>
+      <TaskHoverActions task={task} size="sm" {...actions(task)} />
+    </div>
   );
 }
 
@@ -59,7 +63,7 @@ function DayNumber({ date, today, muted }) {
   );
 }
 
-function MonthView({ cursor, tasksByDay, today, onOpen, onAdd, onShowWeek }) {
+function MonthView({ cursor, tasksByDay, today, actions, onAdd, onShowWeek }) {
   const days = monthDays(cursor);
   return (
     <GlassCard className="overflow-hidden">
@@ -103,7 +107,7 @@ function MonthView({ cursor, tasksByDay, today, onOpen, onAdd, onShowWeek }) {
 
               <div className="mt-1 hidden space-y-1 sm:block">
                 {dayTasks.slice(0, MAX_CHIPS).map((t) => (
-                  <TaskChip key={t.taskId} task={t} onClick={() => onOpen(t)} />
+                  <TaskChip key={t.taskId} task={t} actions={actions} />
                 ))}
                 {extra > 0 && (
                   <button type="button" onClick={() => onShowWeek(day)} className="px-1.5 text-xs font-medium text-zinc-900 underline-offset-2 hover:underline">
@@ -164,7 +168,7 @@ function WeekView({ cursor, tasksByDay, today, onOpen, onAdd }) {
 }
 
 export default function Calendar() {
-  const { tasks, loading, openNewTask, openEditTask } = useOutletContext();
+  const { tasks, loading, openNewTask, openEditTask, requestDelete, changeStatus } = useOutletContext();
   const [view, setView] = useState("month");
   const [cursor, setCursor] = useState(() => startOfDay(new Date()));
   const today = startOfDay(new Date());
@@ -193,6 +197,12 @@ export default function Calendar() {
           day: "numeric",
           year: "numeric",
         })}`;
+
+  const chipActions = (task) => ({
+    onEdit: () => openEditTask(task),
+    onDelete: () => requestDelete(task),
+    onToggleDone: () => changeStatus(task, task.status === "Completed" ? "Not Started" : "Completed"),
+  });
 
   const showWeek = (day) => {
     setCursor(day);
@@ -247,7 +257,7 @@ export default function Calendar() {
           <Spinner />
         </div>
       ) : view === "month" ? (
-        <MonthView cursor={cursor} tasksByDay={tasksByDay} today={today} onOpen={openEditTask} onAdd={openNewTask} onShowWeek={showWeek} />
+        <MonthView cursor={cursor} tasksByDay={tasksByDay} today={today} actions={chipActions} onAdd={openNewTask} onShowWeek={showWeek} />
       ) : (
         <WeekView cursor={cursor} tasksByDay={tasksByDay} today={today} onOpen={openEditTask} onAdd={openNewTask} />
       )}

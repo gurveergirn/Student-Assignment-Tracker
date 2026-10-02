@@ -65,6 +65,16 @@ export function updateTask(uid, taskId, task) {
   });
 }
 
+// Quick status change without opening the form. hasTime is re-sent because tasks created
+// before the time feature don't have it yet, and the rules require every task to.
+export function setTaskStatus(uid, task, status) {
+  return updateDoc(doc(tasksCollection(uid), task.taskId), {
+    status,
+    hasTime: task.hasTime,
+    updatedAt: serverTimestamp(),
+  });
+}
+
 export function deleteTask(uid, taskId) {
   return deleteDoc(doc(tasksCollection(uid), taskId));
 }

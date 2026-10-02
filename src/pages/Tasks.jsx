@@ -2,15 +2,29 @@ import { useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { GLASS_CONTROL } from "../lib/glass";
 import { Button, GlassCard, IconButton, PriorityBadge, Spinner, StatusBadge } from "../components/ui";
-import { PencilIcon, PlusIcon, TrashIcon } from "../components/icons";
+import { CheckIcon, PencilIcon, PlusIcon, TrashIcon } from "../components/icons";
 import { PRIORITY_DOT, STATUSES, isOverdue } from "../lib/taskMeta";
 import { formatDate, formatTime, relativeDay } from "../lib/dates";
 
 const FILTERS = ["All", ...STATUSES];
-const ROW_GRID = "md:grid md:grid-cols-[minmax(0,2.2fr)_minmax(0,1fr)_minmax(0,1.1fr)_7rem_7.5rem_4.5rem] md:items-center md:gap-4";
+const ROW_GRID = "md:grid md:grid-cols-[minmax(0,2.2fr)_minmax(0,1fr)_minmax(0,1.1fr)_7rem_7.5rem_6.5rem] md:items-center md:gap-4";
+
+// Toggles completion; filled green once the task is done
+function DoneButton({ done, onClick }) {
+  return (
+    <IconButton
+      label={done ? "Mark as not done" : "Mark as done"}
+      aria-pressed={done}
+      onClick={onClick}
+      tone={done ? "successActive" : "success"}
+    >
+      <CheckIcon />
+    </IconButton>
+  );
+}
 
 export default function Tasks() {
-  const { tasks, loading, openNewTask, openEditTask, requestDelete } = useOutletContext();
+  const { tasks, loading, openNewTask, openEditTask, requestDelete, changeStatus } = useOutletContext();
   const [filter, setFilter] = useState("All");
 
   const visible = filter === "All" ? tasks : tasks.filter((t) => t.status === filter);
@@ -97,6 +111,7 @@ export default function Tasks() {
                       <IconButton label="Delete task" tone="danger" onClick={() => requestDelete(task)}>
                         <TrashIcon />
                       </IconButton>
+                      <DoneButton done={done} onClick={() => changeStatus(task, done ? "Not Started" : "Completed")} />
                     </div>
                   </div>
 
@@ -131,6 +146,7 @@ export default function Tasks() {
                     <IconButton label="Delete task" tone="danger" onClick={() => requestDelete(task)}>
                       <TrashIcon />
                     </IconButton>
+                    <DoneButton done={done} onClick={() => changeStatus(task, done ? "Not Started" : "Completed")} />
                   </div>
                 </li>
               );

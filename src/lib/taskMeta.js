@@ -15,7 +15,7 @@ export const PRIORITY_DOT = {
 
 export const STATUS_BADGE = {
   "Not Started": "bg-gray-500/10 text-gray-600 ring-gray-500/15",
-  "In Progress": "bg-zinc-600/70 text-white ring-white/30 backdrop-blur-md",
+  "In Progress": "bg-zinc-700/70 text-white ring-white/30 backdrop-blur-md",
   Completed: "bg-green-500/10 text-green-700 ring-green-500/20",
 };
 

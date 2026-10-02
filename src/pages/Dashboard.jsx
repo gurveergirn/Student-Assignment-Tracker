@@ -5,6 +5,8 @@ import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
 import { Button, GlassCard, PriorityBadge, Spinner, StatusBadge } from "../components/ui";
 import { PlusIcon } from "../components/icons";
+import TaskHoverActions from "../components/TaskHoverActions";
+import { HOVER_BLUR } from "../lib/glass";
 import { PRIORITY_DOT, isOverdue } from "../lib/taskMeta";
 import { addDays, formatTime, formatWeekday, relativeDay, startOfDay } from "../lib/dates";
 
@@ -49,7 +51,7 @@ function ProgressRing({ percent }) {
 
 export default function Dashboard() {
   const { user } = useAuth();
-  const { tasks, loading, openNewTask, openEditTask } = useOutletContext();
+  const { tasks, loading, openNewTask, openEditTask, requestDelete, changeStatus } = useOutletContext();
   const [profile, setProfile] = useState(null);
 
   useEffect(() => {
@@ -160,12 +162,9 @@ export default function Dashboard() {
           ) : (
             <ul className="mt-4 divide-y divide-gray-900/5">
               {stats.upcoming.map((task) => (
-                <li key={task.taskId}>
-                  <button
-                    type="button"
-                    onClick={() => openEditTask(task)}
-                    className="-mx-3 flex w-[calc(100%+1.5rem)] items-center gap-3 rounded-xl px-3 py-3 text-left transition-all duration-200 hover:bg-white/70"
-                  >
+                // tabIndex lets a tap (touch has no hover) or Tab reveal the actions via focus-within
+                <li key={task.taskId} tabIndex={0} className="group/task relative -mx-3 rounded-xl focus:outline-none">
+                  <div className={`flex items-center gap-3 rounded-xl px-3 py-3 group-hover/task:bg-white/60 group-focus-within/task:bg-white/60 ${HOVER_BLUR}`}>
                     <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${PRIORITY_DOT[task.priority]}`} />
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-medium">{task.title}</p>
@@ -179,7 +178,14 @@ export default function Dashboard() {
                       <StatusBadge status={task.status} />
                     </div>
                     <span className="w-20 shrink-0 text-right text-sm font-medium text-gray-700">{relativeDay(task.dueDate)}</span>
-                  </button>
+                  </div>
+
+                  <TaskHoverActions
+                    task={task}
+                    onEdit={() => openEditTask(task)}
+                    onDelete={() => requestDelete(task)}
+                    onToggleDone={() => changeStatus(task, "Completed")}
+                  />
                 </li>
               ))}
             </ul>

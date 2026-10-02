@@ -36,6 +36,9 @@ export function IconButton({ label, tone = "default", className = "", children, 
   const tones = {
     default: "text-gray-500 hover:bg-white hover:text-zinc-900",
     danger: "text-gray-500 hover:bg-red-50 hover:text-red-600",
+    success: "text-gray-500 hover:bg-green-50 hover:text-green-600",
+    successActive:
+      "border border-white/40 bg-green-500/85 text-white shadow-[inset_0_1px_0_0_rgba(255,255,255,0.45)] backdrop-blur-md hover:bg-green-500",
   };
   return (
     <button
