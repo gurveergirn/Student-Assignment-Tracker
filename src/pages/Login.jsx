@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebase";
 import { mapFirebaseError } from "../firebaseErrors";
+import { savePasswordCredential } from "../savePassword";
 import AuthLayout, { ErrorAlert, FormField, SubmitButton } from "../components/AuthLayout";
 
 export default function Login() {
@@ -18,6 +19,7 @@ export default function Login() {
     setLoading(true);
     try {
       await signInWithEmailAndPassword(auth, email, password);
+      await savePasswordCredential(email, password);
       navigate("/dashboard");
     } catch (err) {
       console.error(err);
@@ -43,7 +45,7 @@ export default function Login() {
       <form onSubmit={handleSubmit} className="space-y-4">
         <ErrorAlert message={error} />
 
-        <FormField id="email" label="Email" type="email" placeholder="you@torontomu.ca" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="email" required />
+        <FormField id="email" label="Email" type="email" placeholder="you@torontomu.ca" value={email} onChange={(e) => setEmail(e.target.value)} autoComplete="username email" required />
 
         <div>
           <FormField id="password" label="Password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="current-password" required />

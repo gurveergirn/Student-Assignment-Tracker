@@ -4,7 +4,10 @@ export function mapFirebaseError(code) {
     case "auth/email-already-in-use":
       return "That email is already registered. Try logging in instead.";
     case "auth/invalid-email":
+    case "auth/missing-email":
       return "Please enter a valid email address.";
+    case "auth/unauthorized-continue-uri":
+      return "This site's domain isn't on the authorized domains list in the Firebase console.";
     case "auth/weak-password":
       return "Password should be at least 6 characters.";
     case "auth/invalid-credential":

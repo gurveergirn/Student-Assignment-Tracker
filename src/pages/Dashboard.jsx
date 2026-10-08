@@ -8,6 +8,7 @@ export default function Dashboard() {
   const { user, logout } = useAuth();
   const [profile, setProfile] = useState(null);
   const [profileError, setProfileError] = useState("");
+  const [confirmingLogout, setConfirmingLogout] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -37,7 +38,7 @@ export default function Dashboard() {
           <div className="flex items-center gap-4">
             <span className="hidden text-sm text-slate-500 sm:inline">{user.email}</span>
             <button
-              onClick={handleLogout}
+              onClick={() => setConfirmingLogout(true)}
               className="rounded-lg border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
             >
               Log out
@@ -60,6 +61,55 @@ export default function Dashboard() {
           Your tasks will appear here.
         </div>
       </main>
+
+      {confirmingLogout && (
+        <ConfirmDialog
+          title="Log out?"
+          message="Are you sure you want to log out?"
+          confirmText="Log out"
+          onConfirm={handleLogout}
+          onCancel={() => setConfirmingLogout(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+function ConfirmDialog({ title, message, confirmText, onConfirm, onCancel }) {
+  useEffect(() => {
+    const onKeyDown = (e) => e.key === "Escape" && onCancel();
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [onCancel]);
+
+  return (
+    // Clicking the dimmed backdrop cancels, clicks inside the card don't
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4" onClick={onCancel}>
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="confirm-title"
+        className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl ring-1 ring-slate-100"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h2 id="confirm-title" className="text-lg font-semibold text-slate-900">{title}</h2>
+        <p className="mt-2 text-sm text-slate-600">{message}</p>
+        <div className="mt-6 flex justify-end gap-3">
+          <button
+            autoFocus
+            onClick={onCancel}
+            className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm transition hover:bg-indigo-700"
+          >
+            {confirmText}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

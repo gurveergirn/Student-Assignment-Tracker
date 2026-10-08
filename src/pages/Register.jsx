@@ -4,6 +4,7 @@ import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { auth, db } from "../firebase";
 import { mapFirebaseError } from "../firebaseErrors";
+import { savePasswordCredential } from "../savePassword";
 import AuthLayout, { ErrorAlert, FormField, SubmitButton } from "../components/AuthLayout";
 
 export default function Register() {
@@ -46,6 +47,7 @@ export default function Register() {
         createdAt: serverTimestamp(),
       });
 
+      await savePasswordCredential(form.email, form.password, `${form.firstName} ${form.lastName}`);
       navigate("/dashboard");
     } catch (err) {
       console.error(err);
@@ -76,7 +78,7 @@ export default function Register() {
           <FormField id="lastName" label="Last name" value={form.lastName} onChange={update("lastName")} autoComplete="family-name" required />
         </div>
 
-        <FormField id="email" label="Email" type="email" placeholder="you@torontomu.ca" value={form.email} onChange={update("email")} autoComplete="email" required />
+        <FormField id="email" label="Email" type="email" placeholder="you@torontomu.ca" value={form.email} onChange={update("email")} autoComplete="username email" required />
 
         <FormField id="password" label="Password" type="password" placeholder="At least 6 characters" value={form.password} onChange={update("password")} autoComplete="new-password" minLength={6} required />
 
