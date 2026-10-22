@@ -1,9 +1,36 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    function isOwner(uid) {
+      return request.auth != null && request.auth.uid == uid;
+    }
+
+    // Same checks as validateTask() in src/tasks.js
+    function isValidTask(task) {
+      return task.keys().hasOnly(['title', 'description', 'dueDate', 'priority', 'status', 'course', 'createdAt', 'updatedAt'])
+        && task.title is string && task.title.size() > 0 && task.title.size() <= 100
+        && task.description is string && task.description.size() <= 1000
+        && task.dueDate is string && task.dueDate.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && task.priority in ['Low', 'Medium', 'High']
+        && task.status in ['Not Started', 'In Progress', 'Completed']
+        && task.course is string && task.course.size() <= 50
+        && task.updatedAt == request.time;
+    }
+
     // Each user can only read/write their own profile document
     match /users/{uid} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
+      allow read, write: if isOwner(uid);
+
+      // Each user can only read/write their own tasks
+      match /tasks/{taskId} {
+        allow read, delete: if isOwner(uid);
+        allow create: if isOwner(uid)
+          && isValidTask(request.resource.data)
+          && request.resource.data.createdAt == request.time;
+        allow update: if isOwner(uid)
+          && isValidTask(request.resource.data)
+          && request.resource.data.createdAt == resource.data.createdAt;
+      }
     }
   }
 }
