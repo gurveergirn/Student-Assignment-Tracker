@@ -3,7 +3,16 @@ import { useNavigate } from "react-router-dom";
 import { doc, onSnapshot } from "firebase/firestore";
 import { db } from "../firebase";
 import { useAuth } from "../context/AuthContext";
-import { createTask, deleteTask, subscribeToTasks, taskErrorMessage, updateTask } from "../tasks";
+import {
+  SORT_OPTIONS,
+  createTask,
+  deleteTask,
+  markTaskComplete,
+  sortTasks,
+  subscribeToTasks,
+  taskErrorMessage,
+  updateTask,
+} from "../tasks";
 import ConfirmDialog from "../components/ConfirmDialog";
 import TaskForm from "../components/TaskForm";
 import TaskCard from "../components/TaskCard";
@@ -21,6 +30,7 @@ export default function Dashboard() {
   const [taskToDelete, setTaskToDelete] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [notice, setNotice] = useState("");
+  const [sortBy, setSortBy] = useState("course");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -59,6 +69,7 @@ export default function Dashboard() {
 
   const courseGroups = useMemo(() => groupByCourse(tasks), [tasks]);
   const courseNames = useMemo(() => courseGroups.filter((g) => g.name).map((g) => g.name), [courseGroups]);
+  const sortedTasks = useMemo(() => sortTasks(tasks, sortBy), [tasks, sortBy]);
 
   const handleLogout = async () => {
     await logout();
@@ -76,6 +87,16 @@ export default function Dashboard() {
     setFormState(null);
   };
 
+  const handleComplete = async (task) => {
+    try {
+      await markTaskComplete(user.uid, task);
+      setNotice("Task completed.");
+    } catch (err) {
+      console.error(err);
+      setTasksError(taskErrorMessage(err));
+    }
+  };
+
   const handleDelete = async () => {
     setDeleting(true);
     try {
@@ -91,6 +112,16 @@ export default function Dashboard() {
   };
 
   const name = profile?.firstName || user.displayName || user.email;
+
+  const renderCard = (task) => (
+    <TaskCard
+      key={task.id}
+      task={task}
+      onEdit={(t) => setFormState({ task: t })}
+      onDelete={setTaskToDelete}
+      onComplete={handleComplete}
+    />
+  );
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -113,7 +144,9 @@ export default function Dashboard() {
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <h1 className="text-3xl font-bold tracking-tight text-slate-900">Hi, {name} 👋</h1>
-            <p className="mt-2 text-slate-600">Here are your tasks, organized by course.</p>
+            <p className="mt-2 text-slate-600">
+              {sortBy === "course" ? "Here are your tasks, organized by course." : "Here are all of your tasks."}
+            </p>
           </div>
           <button
             onClick={() => setFormState({ task: null })}
@@ -147,28 +180,43 @@ export default function Dashboard() {
             No tasks yet. Click <span className="font-medium text-slate-700">+ Add task</span> to create your first one.
           </div>
         ) : (
-          <div className="mt-8 space-y-10">
-            {courseGroups.map((group, i) => (
-              <section key={group.key} aria-labelledby={`course-${i}`}>
-                <h2 id={`course-${i}`} className="flex items-center gap-2 text-lg font-semibold text-slate-900">
-                  {group.name || "No course"}
-                  <span className="rounded-full bg-slate-200 px-2 py-0.5 text-xs font-medium text-slate-700">
-                    {group.tasks.length}
-                  </span>
-                </h2>
-                <ul className="mt-3 grid gap-4 sm:grid-cols-2">
-                  {group.tasks.map((task) => (
-                    <TaskCard
-                      key={task.id}
-                      task={task}
-                      onEdit={(t) => setFormState({ task: t })}
-                      onDelete={setTaskToDelete}
-                    />
-                  ))}
-                </ul>
-              </section>
-            ))}
-          </div>
+          <>
+            <div className="mt-8 flex justify-end">
+              <label htmlFor="task-sort" className="sr-only">
+                Sort tasks
+              </label>
+              <select
+                id="task-sort"
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-700 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+              >
+                {SORT_OPTIONS.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {sortBy === "course" ? (
+              <div className="mt-4 space-y-10">
+                {courseGroups.map((group, i) => (
+                  <section key={group.key} aria-labelledby={`course-${i}`}>
+                    <h2 id={`course-${i}`} className="flex items-center gap-2 text-lg font-semibold text-slate-900">
+                      {group.name || "No course"}
+                      <span className="rounded-full bg-slate-200 px-2 py-0.5 text-xs font-medium text-slate-700">
+                        {group.tasks.length}
+                      </span>
+                    </h2>
+                    <ul className="mt-3 grid gap-4 sm:grid-cols-2">{group.tasks.map(renderCard)}</ul>
+                  </section>
+                ))}
+              </div>
+            ) : (
+              <ul className="mt-4 grid gap-4 sm:grid-cols-2">{sortedTasks.map(renderCard)}</ul>
+            )}
+          </>
         )}
       </main>
 

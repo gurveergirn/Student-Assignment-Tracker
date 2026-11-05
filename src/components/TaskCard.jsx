@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { formatDueDate } from "../tasks";
 
 const PRIORITY_STYLES = {
@@ -12,9 +13,19 @@ const STATUS_STYLES = {
   Completed: "bg-indigo-100 text-indigo-800 ring-indigo-200",
 };
 
-export default function TaskCard({ task, onEdit, onDelete }) {
+export default function TaskCard({ task, onEdit, onDelete, onComplete }) {
+  const [completing, setCompleting] = useState(false);
+  const isCompleted = task.status === "Completed";
+
+  // Button stays disabled until the write finishes so rapid clicks can't send it twice
+  const handleComplete = async () => {
+    setCompleting(true);
+    await onComplete(task);
+    setCompleting(false);
+  };
+
   return (
-    <li className="flex flex-col rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200">
+    <li className={`flex flex-col rounded-xl bg-white p-5 shadow-sm ring-1 ring-slate-200 ${isCompleted ? "opacity-60" : ""}`}>
       <div className="flex flex-wrap items-center gap-2">
         {task.course && (
           <span className="rounded-md bg-indigo-600 px-2 py-0.5 text-xs font-semibold text-white">{task.course}</span>
@@ -23,16 +34,24 @@ export default function TaskCard({ task, onEdit, onDelete }) {
         <Badge className={STATUS_STYLES[task.status]}>{task.status}</Badge>
       </div>
 
-      <h3 className="mt-3 break-words font-semibold text-slate-900">{task.title}</h3>
+      <h3 className={`mt-3 break-words font-semibold text-slate-900 ${isCompleted ? "line-through" : ""}`}>{task.title}</h3>
       {task.description && (
         <p className="mt-1 whitespace-pre-line break-words text-sm text-slate-600">{task.description}</p>
       )}
 
-      <div className="mt-4 flex items-center justify-between gap-3 border-t border-slate-100 pt-3">
+      <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 pt-3">
         <span className="text-sm text-slate-500">
           Due <span className="font-medium text-slate-700">{formatDueDate(task.dueDate)}</span>
         </span>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={handleComplete}
+            disabled={completing || isCompleted}
+            aria-label={isCompleted ? `${task.title} is completed` : `Mark ${task.title} complete`}
+            className="rounded-lg border border-indigo-200 px-3 py-1.5 text-sm font-medium text-indigo-700 transition hover:bg-indigo-50 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+          >
+            {isCompleted ? "Completed" : "Mark Complete"}
+          </button>
           <button
             onClick={() => onEdit(task)}
             aria-label={`Edit ${task.title}`}

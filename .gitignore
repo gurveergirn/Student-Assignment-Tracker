@@ -26,3 +26,7 @@ dist-ssr
 # Firebase keys
 .env
 .env.example
+
+# Firebase CLI
+.firebase
+*.secret.local

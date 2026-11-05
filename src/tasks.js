@@ -8,11 +8,20 @@ import {
   query,
   runTransaction,
   serverTimestamp,
+  updateDoc,
 } from "firebase/firestore";
 import { db } from "./firebase";
 
 export const PRIORITIES = ["Low", "Medium", "High"];
 export const STATUSES = ["Not Started", "In Progress", "Completed"];
+export const SORT_OPTIONS = [
+  { value: "course", label: "Group by course" },
+  { value: "deadline", label: "Sort by Deadline" },
+  { value: "priority", label: "Sort by Priority" },
+];
+
+// Tasks saved before Sprint 3 can be missing these fields
+const TASK_DEFAULTS = { priority: "Medium", status: "Not Started" };
 
 // Keep these in sync with isValidTask() in firestore.rules
 export const LIMITS = { title: 100, description: 1000, course: 50 };
@@ -28,7 +37,7 @@ export function subscribeToTasks(uid, onChange, onError) {
     (snap) =>
       onChange(
         // "estimate" fills in createdAt/updatedAt while a local write is still pending
-        snap.docs.map((d) => ({ id: d.id, ...d.data({ serverTimestamps: "estimate" }) }))
+        snap.docs.map((d) => ({ id: d.id, ...TASK_DEFAULTS, ...d.data({ serverTimestamps: "estimate" }) }))
       ),
     onError
   );
@@ -59,8 +68,24 @@ export function updateTask(uid, taskId, task, loadedUpdatedAt) {
   });
 }
 
+// Priority is written too because firestore.rules rejects updates to tasks that don't have one yet
+export function markTaskComplete(uid, task) {
+  return updateDoc(doc(tasksCollection(uid), task.id), {
+    status: "Completed",
+    priority: task.priority,
+    updatedAt: serverTimestamp(),
+  });
+}
+
 export function deleteTask(uid, taskId) {
   return deleteDoc(doc(tasksCollection(uid), taskId));
+}
+
+// Nearest deadline first. Priority sort goes High to Low, with the nearest deadline first on ties.
+export function sortTasks(tasks, sortBy) {
+  const byDueDate = (a, b) => a.dueDate.localeCompare(b.dueDate);
+  const byPriority = (a, b) => PRIORITIES.indexOf(b.priority) - PRIORITIES.indexOf(a.priority) || byDueDate(a, b);
+  return [...tasks].sort(sortBy === "priority" ? byPriority : byDueDate);
 }
 
 function taskError(code) {
