@@ -1,11 +1,6 @@
 import { useState } from "react";
 import { formatDueDate } from "../tasks";
-
-const PRIORITY_STYLES = {
-  Low: "bg-green-100 text-green-800 ring-green-200",
-  Medium: "bg-amber-100 text-amber-800 ring-amber-200",
-  High: "bg-red-100 text-red-800 ring-red-200",
-};
+import { priorityStyle } from "../utils/priority";
 
 const STATUS_STYLES = {
   "Not Started": "bg-slate-100 text-slate-700 ring-slate-200",
@@ -30,7 +25,7 @@ export default function TaskCard({ task, onEdit, onDelete, onComplete }) {
         {task.course && (
           <span className="rounded-md bg-indigo-600 px-2 py-0.5 text-xs font-semibold text-white">{task.course}</span>
         )}
-        <Badge className={PRIORITY_STYLES[task.priority]}>{task.priority} priority</Badge>
+        <Badge className={priorityStyle(task.priority)}>{task.priority} priority</Badge>
         <Badge className={STATUS_STYLES[task.status]}>{task.status}</Badge>
       </div>
 
