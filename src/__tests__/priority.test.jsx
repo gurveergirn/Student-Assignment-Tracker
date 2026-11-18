@@ -123,4 +123,24 @@ describe("SM-08 Priority levels", () => {
     expect(errors.priority).toBe("Choose a priority.");
     expect(priorityStyle("Urgent")).toBeUndefined();
   });
+
+  // TC-28 (change priority on edit) / SM-08
+  it("UT-19: editing a task can change its priority and saves the new value", async () => {
+    console.log("@Test: UT-19 change priority on edit");
+    const user = userEvent.setup();
+    const onSubmit = vi.fn(() => Promise.resolve());
+    render(<TaskForm initialTask={tasks.lowSoonest} courses={[]} onSubmit={onSubmit} onCancel={vi.fn()} />);
+
+    const select = screen.getByLabelText(/Priority/);
+    expect(select).toHaveValue("Low"); // form opens with the task's current priority
+
+    await user.selectOptions(select, "High");
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(onSubmit).toHaveBeenCalledTimes(1);
+    const saved = onSubmit.mock.calls[0][0];
+    expect(saved.priority).toBe("High");
+    expect(saved.title).toBe(tasks.lowSoonest.title); // other fields are kept
+    expect(saved.dueDate).toBe(tasks.lowSoonest.dueDate);
+  });
 });
