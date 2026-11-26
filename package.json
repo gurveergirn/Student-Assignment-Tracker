@@ -9,6 +9,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "test": "vitest run",
+    "test:sprint3": "vitest run src/__tests__/sprint3",
+    "test:sprint4": "vitest run src/__tests__/sprint4",
     "test:watch": "vitest"
   },
   "dependencies": {

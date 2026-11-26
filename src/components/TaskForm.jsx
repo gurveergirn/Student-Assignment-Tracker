@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { LIMITS, PRIORITIES, STATUSES, isPastDate, taskErrorMessage, validateTask } from "../tasks";
 import { ErrorAlert, SubmitButton } from "./AuthLayout";
+import { GLASS_BACKDROP, GLASS_MODAL } from "../theme";
 
 const EMPTY_TASK = {
   title: "",
@@ -12,17 +13,18 @@ const EMPTY_TASK = {
 };
 
 const inputClass =
-  "w-full rounded-lg border px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2";
+  "w-full rounded-xl border bg-white/70 px-3 py-2 text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2";
 const okClass = "border-slate-300 focus:border-indigo-500 focus:ring-indigo-500/20";
 const badClass = "border-red-400 focus:border-red-500 focus:ring-red-500/20";
 
-// Popup form for creating a task (no initialTask) or editing one (pre-filled from initialTask)
-export default function TaskForm({ initialTask, courses, onSubmit, onCancel }) {
+// Popup form for creating a task (no initialTask) or editing one (pre-filled from initialTask).
+// defaultDueDate ("YYYY-MM-DD") pre-fills the due date of a new task, e.g. when adding from the calendar.
+export default function TaskForm({ initialTask, defaultDueDate = "", courses, onSubmit, onCancel }) {
   const isEdit = Boolean(initialTask);
   const [values, setValues] = useState(() =>
     isEdit
       ? Object.fromEntries(Object.keys(EMPTY_TASK).map((key) => [key, initialTask[key] ?? EMPTY_TASK[key]]))
-      : EMPTY_TASK
+      : { ...EMPTY_TASK, dueDate: defaultDueDate }
   );
   const [errors, setErrors] = useState({});
   const [formError, setFormError] = useState("");
@@ -65,12 +67,12 @@ export default function TaskForm({ initialTask, courses, onSubmit, onCancel }) {
   });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-900/40 px-4 py-10">
+    <div className={`fixed inset-0 z-50 flex items-start justify-center overflow-y-auto px-4 py-10 ${GLASS_BACKDROP}`}>
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="task-form-title"
-        className="w-full max-w-lg rounded-2xl bg-white p-6 shadow-xl ring-1 ring-slate-100"
+        className={`w-full max-w-lg rounded-3xl p-6 ${GLASS_MODAL}`}
       >
         <h2 id="task-form-title" className="text-lg font-semibold text-slate-900">
           {isEdit ? "Edit task" : "Add task"}
@@ -130,7 +132,7 @@ export default function TaskForm({ initialTask, courses, onSubmit, onCancel }) {
               type="button"
               onClick={onCancel}
               disabled={saving}
-              className="rounded-lg border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-slate-100 disabled:opacity-60"
+              className="rounded-xl border border-slate-300 px-4 py-2 text-sm font-medium text-slate-700 transition hover:bg-white/70 disabled:opacity-60"
             >
               Cancel
             </button>

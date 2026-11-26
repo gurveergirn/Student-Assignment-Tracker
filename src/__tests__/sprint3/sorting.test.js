@@ -1,7 +1,7 @@
 // Unit tests for SM-09: Sorting
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
-import { sortTasks } from "../tasks";
-import { makeMockTasks } from "../test/fixtures";
+import { sortTasks } from "../../tasks";
+import { makeMockTasks } from "../../test/fixtures";
 
 describe("SM-09 Sorting", () => {
   let tasks;

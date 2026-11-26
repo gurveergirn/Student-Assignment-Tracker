@@ -3,11 +3,11 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { onSnapshot } from "firebase/firestore";
-import TaskForm from "../components/TaskForm";
-import TaskCard from "../components/TaskCard";
-import { PRIORITIES, subscribeToTasks, validateTask } from "../tasks";
-import { PRIORITY_STYLES, priorityStyle } from "../utils/priority";
-import { makeMockTasks } from "../test/fixtures";
+import TaskForm from "../../components/TaskForm";
+import TaskCard from "../../components/TaskCard";
+import { PRIORITIES, subscribeToTasks, validateTask } from "../../tasks";
+import { PRIORITY_STYLES, priorityStyle } from "../../utils/priority";
+import { makeMockTasks } from "../../test/fixtures";
 
 // Copy of obj without one field (e.g. a task saved before priorities existed)
 const without = (obj, key) => Object.fromEntries(Object.entries(obj).filter(([k]) => k !== key));

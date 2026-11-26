@@ -2,9 +2,9 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { updateDoc } from "firebase/firestore";
-import TaskCard from "../components/TaskCard";
-import { markTaskComplete, taskErrorMessage } from "../tasks";
-import { makeMockTasks } from "../test/fixtures";
+import TaskCard from "../../components/TaskCard";
+import { markTaskComplete, taskErrorMessage } from "../../tasks";
+import { makeMockTasks } from "../../test/fixtures";
 
 describe("SM-10 Mark complete", () => {
   let tasks;
@@ -62,9 +62,11 @@ describe("SM-10 Mark complete", () => {
     expect(title).toHaveClass("line-through");
     expect(title.closest("li")).toHaveClass("opacity-60");
 
+    // Sprint 4: the done button is a check icon that stays solid green once the task is completed
     const button = screen.getByRole("button", { name: "Assignment 1 is completed" });
-    expect(button).toHaveTextContent("Completed");
+    expect(button).toHaveClass("bg-green-600");
     expect(button).toBeDisabled();
+    expect(screen.getByText("Completed")).toBeInTheDocument(); // status badge
   });
 
   // TC-35 (completed tasks visually distinct) / SM-10
@@ -74,7 +76,9 @@ describe("SM-10 Mark complete", () => {
     const title = screen.getByRole("heading", { name: "Reading quiz" });
     expect(title).not.toHaveClass("line-through");
     expect(title.closest("li")).not.toHaveClass("opacity-60");
-    expect(screen.getByRole("button", { name: "Mark Reading quiz complete" })).toBeEnabled();
+    const button = screen.getByRole("button", { name: "Mark Reading quiz complete" });
+    expect(button).toBeEnabled();
+    expect(button).not.toHaveClass("bg-green-600"); // outlined only, fills on hover
   });
 
   // TC-36 (rapid clicks don't duplicate writes) / SM-10

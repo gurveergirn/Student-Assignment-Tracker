@@ -9,3 +9,10 @@ export const PRIORITY_STYLES = {
 export function priorityStyle(priority) {
   return PRIORITY_STYLES[priority];
 }
+
+// Left-edge colour strip for compact task rows (calendar chips, task list dialogs)
+export const PRIORITY_BORDER = {
+  Low: "border-l-green-500",
+  Medium: "border-l-amber-500",
+  High: "border-l-red-500",
+};
